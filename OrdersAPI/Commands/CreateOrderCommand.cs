@@ -1,0 +1,1 @@
+public record CreateOderCommand(string FirstName, string LastName, string Status, decimal TotalCost);

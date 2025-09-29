@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,17 +8,24 @@ builder.Services.AddDbContext<AppDbContext>(opt => opt.UseSqlite(
 
 var app = builder.Build();
 
-app.MapPost("/api/orders", async (AppDbContext context, Order order) =>
+app.MapPost("/api/orders", async (AppDbContext context, CreateOderCommand command) =>
 {
-    await context.Orders.AddAsync(order);
-    await context.SaveChangesAsync();
+    // await context.Orders.AddAsync(order);
+    // await context.SaveChangesAsync();
 
-    return Results.Created($"/api/orders/{order.Id}", order);
+    var createdOrder = await CreateOderCommandHandler.Handle(command, context);
+
+    if (createdOrder == null)
+    {
+        return Results.BadRequest("Failed to create order");
+    }
+
+    return Results.Created($"/api/orders/{createdOrder.Id}", createdOrder);
 });
 
 app.MapGet("/api/orders/{id}", async (AppDbContext context, int id) =>
 {
-    var order = await context.Orders.FirstOrDefaultAsync(o => o.Id == id);
+    var order = await GetOrderByIdQueryHandler.Handle(new GetOrderByIdQuery(id), context);
 
     if (order == null)
     {
