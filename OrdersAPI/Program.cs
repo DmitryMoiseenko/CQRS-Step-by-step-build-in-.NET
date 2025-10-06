@@ -6,14 +6,14 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AppDbContext>(opt => opt.UseSqlite(
     builder.Configuration.GetConnectionString("BaseConnection")));
 
+builder.Services.AddScoped<ICommandHandler<CreateOderCommand, OrderDto>, CreateOrderCommandHandler>();
+builder.Services.AddScoped<IQueryHandler<GetOrderByIdQuery, OrderDto>, GetOrderByIdQueryHandler>();
+
 var app = builder.Build();
 
-app.MapPost("/api/orders", async (AppDbContext context, CreateOderCommand command) =>
+app.MapPost("/api/orders", async (ICommandHandler<CreateOderCommand, OrderDto> handler, CreateOderCommand command) =>
 {
-    // await context.Orders.AddAsync(order);
-    // await context.SaveChangesAsync();
-
-    var createdOrder = await CreateOderCommandHandler.Handle(command, context);
+    var createdOrder = await handler.HandleAsync(command);
 
     if (createdOrder == null)
     {
@@ -23,9 +23,9 @@ app.MapPost("/api/orders", async (AppDbContext context, CreateOderCommand comman
     return Results.Created($"/api/orders/{createdOrder.Id}", createdOrder);
 });
 
-app.MapGet("/api/orders/{id}", async (AppDbContext context, int id) =>
+app.MapGet("/api/orders/{id}", async (IQueryHandler<GetOrderByIdQuery, OrderDto> handler, int id) =>
 {
-    var order = await GetOrderByIdQueryHandler.Handle(new GetOrderByIdQuery(id), context);
+    var order = await handler.HandleAsync(new GetOrderByIdQuery(id));
 
     if (order == null)
     {

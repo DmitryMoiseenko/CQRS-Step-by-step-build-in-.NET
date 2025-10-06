@@ -1,6 +1,13 @@
-public class CreateOderCommandHandler
+public class CreateOrderCommandHandler : ICommandHandler<CreateOderCommand, OrderDto>
 {
-    public static async Task<Order> Handle(CreateOderCommand command, AppDbContext context)
+    private AppDbContext _context;
+
+    public CreateOrderCommandHandler(AppDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<OrderDto> HandleAsync(CreateOderCommand command)
     {
         var order = new Order
         {
@@ -11,9 +18,16 @@ public class CreateOderCommandHandler
             TotalCost = command.TotalCost
         };
 
-        await context.Orders.AddAsync(order);
-        await context.SaveChangesAsync();
+        await _context.Orders.AddAsync(order);
+        await _context.SaveChangesAsync();
 
-        return order;
+        return new OrderDto(
+            order.Id,
+            order.FirstName,
+            order.LastName,
+            order.Status,
+            order.CreatedAt,
+            order.TotalCost
+        );
     }
 }
