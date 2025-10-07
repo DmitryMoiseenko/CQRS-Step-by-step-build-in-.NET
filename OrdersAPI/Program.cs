@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Http.HttpResults;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,19 +8,27 @@ builder.Services.AddDbContext<AppDbContext>(opt => opt.UseSqlite(
 
 builder.Services.AddScoped<ICommandHandler<CreateOderCommand, OrderDto>, CreateOrderCommandHandler>();
 builder.Services.AddScoped<IQueryHandler<GetOrderByIdQuery, OrderDto>, GetOrderByIdQueryHandler>();
+builder.Services.AddScoped<IValidator<CreateOderCommand>, CreateOrderCommandValidator>();
 
 var app = builder.Build();
 
 app.MapPost("/api/orders", async (ICommandHandler<CreateOderCommand, OrderDto> handler, CreateOderCommand command) =>
 {
     var createdOrder = await handler.HandleAsync(command);
-
-    if (createdOrder == null)
+    try
     {
-        return Results.BadRequest("Failed to create order");
-    }
+        if (createdOrder == null)
+        {
+            return Results.BadRequest("Failed to create order");
+        }
 
-    return Results.Created($"/api/orders/{createdOrder.Id}", createdOrder);
+        return Results.Created($"/api/orders/{createdOrder.Id}", createdOrder);
+    }
+    catch (ValidationException exception)
+    {
+        var errors = exception.Errors.Select(e => new { e.PropertyName, e.ErrorMessage });
+        return Results.BadRequest(errors);
+    }
 });
 
 app.MapGet("/api/orders/{id}", async (IQueryHandler<GetOrderByIdQuery, OrderDto> handler, int id) =>
