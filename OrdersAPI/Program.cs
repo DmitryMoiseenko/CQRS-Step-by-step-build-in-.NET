@@ -12,6 +12,8 @@ builder.Services.AddScoped<IValidator<CreateOderCommand>, CreateOrderCommandVali
 builder.Services.AddScoped<IQueryHandler<GetOrderByIdQuery, OrderDto>, GetOrderByIdQueryHandler>();
 builder.Services.AddScoped<IQueryHandler<GetOrderSummariesQuery, List<OrderSummaryDto>>, GetOrderSummariesQueryHandler>();
 
+builder.Services.AddSingleton<IEventPublisher, ConsoleEventPublisher>();
+
 var app = builder.Build();
 
 app.MapPost("/api/orders", async (ICommandHandler<CreateOderCommand, OrderDto> handler, CreateOderCommand command) =>
