@@ -3,12 +3,12 @@ using FluentValidation;
 
 public class CreateOrderCommandHandler : ICommandHandler<CreateOderCommand, OrderDto>
 {
-    private AppDbContext _context;
+    private WriteDbContext _context;
     private IValidator<CreateOderCommand> _validator;
     private IEventPublisher _eventPublisher;
 
     public CreateOrderCommandHandler(
-        AppDbContext context, IValidator<CreateOderCommand> validator, IEventPublisher eventPublisher)
+        WriteDbContext context, IValidator<CreateOderCommand> validator, IEventPublisher eventPublisher)
     {
         _context = context;
         _validator = validator;

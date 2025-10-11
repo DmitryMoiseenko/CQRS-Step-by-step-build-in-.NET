@@ -3,10 +3,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace OrdersAPI.Migrations
+namespace OrdersAPI.Migrations.Read
 {
     /// <inheritdoc />
-    public partial class InitialMigration : Migration
+    public partial class ReadDbMigrations : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

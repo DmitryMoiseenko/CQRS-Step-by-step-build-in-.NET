@@ -3,8 +3,11 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<AppDbContext>(opt => opt.UseSqlite(
-    builder.Configuration.GetConnectionString("BaseConnection")));
+builder.Services.AddDbContext<ReadDbContext>(opt => opt.UseSqlite(
+    builder.Configuration.GetConnectionString("ReadDbConnection")));
+builder.Services.AddDbContext<WriteDbContext>(opt => opt.UseSqlite(
+    builder.Configuration.GetConnectionString("WriteDbConnection")));
+
 
 builder.Services.AddScoped<ICommandHandler<CreateOderCommand, OrderDto>, CreateOrderCommandHandler>();
 builder.Services.AddScoped<IValidator<CreateOderCommand>, CreateOrderCommandValidator>();
