@@ -1,4 +1,5 @@
 using FluentValidation;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,22 +8,14 @@ builder.Services.AddDbContext<ReadDbContext>(opt => opt.UseSqlite(
     builder.Configuration.GetConnectionString("ReadDbConnection")));
 builder.Services.AddDbContext<WriteDbContext>(opt => opt.UseSqlite(
     builder.Configuration.GetConnectionString("WriteDbConnection")));
-
-
-builder.Services.AddScoped<ICommandHandler<CreateOderCommand, OrderDto>, CreateOrderCommandHandler>();
 builder.Services.AddScoped<IValidator<CreateOderCommand>, CreateOrderCommandValidator>();
-
-builder.Services.AddScoped<IQueryHandler<GetOrderByIdQuery, OrderDto>, GetOrderByIdQueryHandler>();
-builder.Services.AddScoped<IQueryHandler<GetOrderSummariesQuery, List<OrderSummaryDto>>, GetOrderSummariesQueryHandler>();
-
-builder.Services.AddSingleton<IEventPublisher, InProcessEventPublisher>();
-builder.Services.AddScoped<IEventHandler<OrderCreatedEvent>, OrderCreatedProjectionHandler>();
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
 
 var app = builder.Build();
 
-app.MapPost("/api/orders", async (ICommandHandler<CreateOderCommand, OrderDto> handler, CreateOderCommand command) =>
+app.MapPost("/api/orders", async (IMediator mediator, CreateOderCommand command) =>
 {
-    var createdOrder = await handler.HandleAsync(command);
+    var createdOrder = await mediator.Send(command);
     try
     {
         if (createdOrder == null)
@@ -39,9 +32,9 @@ app.MapPost("/api/orders", async (ICommandHandler<CreateOderCommand, OrderDto> h
     }
 });
 
-app.MapGet("/api/orders/{id}", async (IQueryHandler<GetOrderByIdQuery, OrderDto> handler, int id) =>
+app.MapGet("/api/orders/{id}", async (IMediator mediator, int id) =>
 {
-    var order = await handler.HandleAsync(new GetOrderByIdQuery(id));
+    var order = await mediator.Send(new GetOrderByIdQuery(id));
 
     if (order == null)
     {
@@ -51,9 +44,9 @@ app.MapGet("/api/orders/{id}", async (IQueryHandler<GetOrderByIdQuery, OrderDto>
     return Results.Ok(order);
 });
 
-app.MapGet("/api/orders", async (IQueryHandler<GetOrderSummariesQuery, List<OrderSummaryDto>> handler) =>
+app.MapGet("/api/orders", async (IMediator mediator) =>
 {
-    var summaries = await handler.HandleAsync(new GetOrderSummariesQuery());
+    var summaries = await mediator.Send(new GetOrderSummariesQuery());
 
     return Results.Ok(summaries);
 });
